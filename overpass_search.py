@@ -1,7 +1,6 @@
 import requests
 
 def get_businesses_in_radius(lat, lon, radius_km=1.5):
-    # Liste von alternativen Overpass-Servern (Failover-Kette)
     endpoints = [
         "https://overpass-api.de/api/interpreter",
         "https://overpass.private.coffee/api/interpreter",
@@ -10,13 +9,14 @@ def get_businesses_in_radius(lat, lon, radius_km=1.5):
     
     radius_meters = int(radius_km * 1000)
     
+    # Gezieltere Abfrage: Nur echte Shops, Supermärkte, Gastronomie und Dienstleister
     query = f"""
     [out:json][timeout:30];
     (
       node(around:{radius_meters},{lat},{lon})[shop];
       way(around:{radius_meters},{lat},{lon})[shop];
-      node(around:{radius_meters},{lat},{lon})[amenity];
-      way(around:{radius_meters},{lat},{lon})[amenity];
+      node(around:{radius_meters},{lat},{lon})[amenity~"restaurant|cafe|fast_food|bar|pub|supermarket|bakery|pharmacy"];
+      way(around:{radius_meters},{lat},{lon})[amenity~"restaurant|cafe|fast_food|bar|pub|supermarket|bakery|pharmacy"];
     );
     out body center;
     """
@@ -25,7 +25,6 @@ def get_businesses_in_radius(lat, lon, radius_km=1.5):
         'User-Agent': 'MinijobMailer/1.0 (Schulprojekt)'
     }
     
-    # Schleife für das automatische Failover
     for url in endpoints:
         try:
             print(f"Versuche Overpass-Server: {url} ...")
@@ -40,7 +39,11 @@ def get_businesses_in_radius(lat, lon, radius_km=1.5):
                 tags = element.get('tags', {})
                 name = tags.get('name')
                 
+                # Filter: Ignoriere Einträge, die nach Straße/Haltestelle klingen
                 if name and name not in seen_names:
+                    if any(keyword in name.lower() for keyword in ["straße", "weg", "allee", "platz"]):
+                        continue # Überspringen, wenn es reine Straßennamen sind
+                        
                     seen_names.add(name)
                     
                     street = tags.get('addr:street', '')
@@ -65,12 +68,12 @@ def get_businesses_in_radius(lat, lon, radius_km=1.5):
                         'website': website
                     })
                     
-            print(f"Erfolgreich Daten von {url} geladen!")
+            print(f"Erfolgreich gefilterte Daten von {url} geladen!")
             return businesses
 
         except requests.exceptions.RequestException as e:
             print(f"⚠️ Server {url} fehlgeschlagen ({e}). Wechsle zum nächsten Mirror...")
             continue
             
-    print("❌ Alle Overpass-Server sind aktuell nicht erreichbar oder im Timeout.")
+    print("❌ Alle Overpass-Server sind aktuell nicht erreichbar.")
     return []
