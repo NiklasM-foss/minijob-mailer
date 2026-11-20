@@ -1,11 +1,12 @@
 import requests
 
-def get_businesses_in_radius(lat, lon, radius_km=5):
-    # Stabilen Mirror verwenden, um 502 Bad Gateway zu vermeiden
-    url = "https://overpass.kumi.systems/api/interpreter"
+def get_businesses_in_radius(lat, lon, radius_km=1.5):
+    # Offizieller Hauptserver oder stabiler Mirror (private.coffee / ex-kumi.systems)
+    url = "https://overpass-api.de/api/interpreter"
     
     radius_meters = int(radius_km * 1000)
     
+    # Optimierte Query: 'out body center;' statt schwerem '>' (verhindert Timeouts)
     query = f"""
     [out:json][timeout:25];
     (
@@ -14,9 +15,7 @@ def get_businesses_in_radius(lat, lon, radius_km=5):
       node(around:{radius_meters},{lat},{lon})[amenity];
       way(around:{radius_meters},{lat},{lon})[amenity];
     );
-    out body;
-    >;
-    out skel qt;
+    out body center;
     """
     
     headers = {
@@ -24,7 +23,7 @@ def get_businesses_in_radius(lat, lon, radius_km=5):
     }
     
     try:
-        response = requests.post(url, data={'data': query}, headers=headers, timeout=15)
+        response = requests.post(url, data={'data': query}, headers=headers, timeout=25)
         response.raise_for_status()
         data = response.json()
         
