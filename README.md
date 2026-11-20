@@ -51,10 +51,7 @@ Pakete installieren:
 
 ```bash
 pip install -r requirements.txt
-pip install requests
 ```
-
-`requests` steht noch nicht in der `requirements.txt` und muss deshalb im Moment extra installiert werden.
 
 ## Konfiguration
 
@@ -99,7 +96,6 @@ python -c "from citycoordinates import get_coordinates; print(get_coordinates('L
 ## Bekannte Probleme
 
 - `get_coordinates` bricht mit einem Fehler ab, wenn kein Ort gefunden wird oder die Anfrage fehlschlägt, weil dann kein Rückgabewert vorhanden ist.
-- `.env.example` enthält bisher nur `debug`, die SMTP-Variablen fehlen dort noch.
 
 ## Hinweise zur Nutzung
 
