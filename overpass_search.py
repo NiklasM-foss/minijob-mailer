@@ -8,7 +8,7 @@ def get_businesses_in_radius(lat, lon, radius_km=1.5):
     
     # Optimierte Query: 'out body center;' statt schwerem '>' (verhindert Timeouts)
     query = f"""
-    [out:json][timeout:25];
+    [out:json][timeout:60];
     (
       node(around:{radius_meters},{lat},{lon})[shop];
       way(around:{radius_meters},{lat},{lon})[shop];
@@ -23,7 +23,7 @@ def get_businesses_in_radius(lat, lon, radius_km=1.5):
     }
     
     try:
-        response = requests.post(url, data={'data': query}, headers=headers, timeout=25)
+        response = requests.post(url, data={'data': query}, headers=headers, timeout=60)
         response.raise_for_status()
         data = response.json()
         
